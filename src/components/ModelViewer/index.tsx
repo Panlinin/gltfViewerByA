@@ -2,7 +2,6 @@ import React, { useRef, useEffect, useState, useCallback, memo } from 'react';
 import { useThree } from '@react-three/fiber';
 import { OrbitControls, Stage, Stats } from '@react-three/drei';
 import * as THREE from 'three';
-import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { CameraPositionTracker } from '../PositionInfo';
 import OptimizedCanvas from '../OptimizedCanvas';
 import './styles.css';
