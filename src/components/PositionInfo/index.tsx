@@ -2,10 +2,13 @@ import React, { useRef, useCallback, useEffect, useState, useMemo, memo } from '
 import * as THREE from 'three';
 import { useThree, useFrame } from '@react-three/fiber';
 import { debounce } from '../../utils/debounce';
+import { Tree } from 'antd';
+import type { TreeProps } from 'antd/es/tree';
 
 interface PositionInfoProps {
   modelCenter?: THREE.Vector3;
   cameraPosition?: THREE.Vector3;
+  scene?: string;
 }
 
 // 创建Three.js场景上下文使用的组件
@@ -51,8 +54,98 @@ const VectorDisplay = memo<{label: string, vector?: THREE.Vector3}>(({ label, ve
   );
 });
 
+// 场景面板组件
+const ScenePanel: React.FC<{ 
+  scene?: any;
+}> = memo(({ scene }) => {
+  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+  const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
+
+  // 将场景数据转换为 Ant Design Tree 组件所需的格式
+  const treeData = useMemo(() => {
+    if (!scene) return [];
+    
+    const extractNameAndType = (node: any): any => {
+      const result: any = {
+        title: `${node.name || '无名'} (${node.type || '未知类型'})`,
+        key: node.uuid || node.name || Math.random().toString(),
+        children: [],
+        uuid: node.uuid, // 保存uuid用于后续查找对象
+      };
+      
+      if (node.children && node.children.length > 0) {
+        result.children = node.children.map(extractNameAndType);
+        // 收集所有expandedKeys
+        result.children.forEach((child: any) => {
+          if (child.key) {
+            expandedKeys.push(child.key);
+          }
+        });
+      }
+      
+      return result;
+    };
+    
+    const data = [extractNameAndType(scene.scene)];
+    
+    // 设置初始展开的节点
+    if (data[0]?.key) {
+      expandedKeys.push(data[0].key);
+    }
+    
+    return data;
+  }, [scene]);
+
+  useEffect(() => {
+    if (treeData.length > 0) {
+      setExpandedKeys(expandedKeys);
+    }
+  }, [treeData]);
+
+  // 处理节点选中事件
+  const handleSelect: TreeProps['onSelect'] = (selectedKeys, info) => {
+    setSelectedKeys(selectedKeys as string[]);
+    
+    // 添加highlightNode自定义事件，传递uuid到Canvas内部进行处理
+    if (selectedKeys.length > 0 && info.node) {
+      const uuid = (info.node as any).uuid;
+      // 使用自定义事件在Canvas外部传递信息到Canvas内部
+      const event = new CustomEvent('highlightNode', { 
+        detail: { uuid, highlight: true } 
+      });
+      window.dispatchEvent(event);
+    } else {
+      // 如果没有选中节点，发送清除高亮的事件
+      const event = new CustomEvent('highlightNode', { 
+        detail: { uuid: null, highlight: false } 
+      });
+      window.dispatchEvent(event);
+    }
+  };
+
+  return (
+    <div style={{
+      maxHeight: '180px', // 限制最大高度
+      overflowY: 'auto', // 启用垂直滚动条
+      margin: '8px 0',
+      color: '#555',
+      fontSize: '13px'
+    }}>
+      <Tree
+        treeData={treeData}
+        defaultExpandAll
+        expandedKeys={expandedKeys}
+        onExpand={(keys) => setExpandedKeys(keys as string[])}
+        selectedKeys={selectedKeys}
+        onSelect={handleSelect}
+        virtual
+      />
+    </div>
+  );
+});
+
 // 位置信息组件
-const PositionInfo: React.FC<PositionInfoProps> = ({ modelCenter, cameraPosition }) => {
+const PositionInfo: React.FC<PositionInfoProps> = ({ modelCenter, cameraPosition, scene }) => {
   // 使用内部状态来防抖显示
   const [displayCameraPosition, setDisplayCameraPosition] = useState<THREE.Vector3 | undefined>(cameraPosition);
   const [displayModelCenter, setDisplayModelCenter] = useState<THREE.Vector3 | undefined>(modelCenter);
@@ -106,6 +199,7 @@ const PositionInfo: React.FC<PositionInfoProps> = ({ modelCenter, cameraPosition
       <h4 style={headerStyle}>位置信息</h4>
       <VectorDisplay label="相机位置" vector={displayCameraPosition} />
       <VectorDisplay label="模型中心" vector={displayModelCenter} />
+      {scene && <ScenePanel scene={scene} />}
     </div>
   );
 };

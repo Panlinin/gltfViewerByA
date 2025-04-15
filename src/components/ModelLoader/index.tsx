@@ -10,9 +10,10 @@ import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 interface ModelLoaderProps {
   fileUrl: string;
   onModelLoad?: (center: THREE.Vector3, size: THREE.Vector3) => void;
+  onSceneLoad?: (sceneData: any) => void;
 }
 
-const ModelLoader: React.FC<ModelLoaderProps> = React.memo(({ fileUrl, onModelLoad }) => {
+const ModelLoader: React.FC<ModelLoaderProps> = React.memo(({ fileUrl, onModelLoad, onSceneLoad }) => {
   const modelRef = useRef<THREE.Group>(null);
   const [loadProgress, setLoadProgress] = useState(0);
   const { gl } = useThree();
@@ -67,46 +68,12 @@ const ModelLoader: React.FC<ModelLoaderProps> = React.memo(({ fileUrl, onModelLo
   const [gltf, setGltf] = useState<GLTF | null>(null);
   const [error, setError] = useState<string | null>(null);
   
-  // 当文件URL变化时加载模型
-  useEffect(() => {
-    if (!gltfLoaderRef.current || !fileUrl) return;
-    
-    // 重置状态
-    setLoadProgress(0);
-    setGltf(null);
-    setError(null);
-    
-    // console.log('开始加载模型:', fileUrl);
-    
-    // 手动加载模型
-    gltfLoaderRef.current.load(
-      fileUrl,
-      // 成功回调
-      (loadedGltf) => {
-        console.log('模型加载成功');
-        setGltf(loadedGltf);
-        setLoadProgress(100);
-      },
-      // 进度回调
-      (event) => {
-        if (event.lengthComputable) {
-          const progress = Math.round((event.loaded / event.total) * 100);
-          console.log(`直接进度: ${progress}%`);
-          setLoadProgress(progress);
-        }
-      },
-      // 错误回调
-      (error) => {
-        console.error('模型加载失败:', error);
-        setError(error instanceof Error ? error.message : '未知错误');
-      }
-    );
-    
-    // 清理函数
-    return () => {
-      URL.revokeObjectURL(fileUrl);
-    };
-  }, [fileUrl]);
+  // 提取材质处理逻辑
+  const handleMaterial = (material: THREE.Material) => {
+    if ((material as MeshStandardMaterial).map) {
+      (material as MeshStandardMaterial).map!.anisotropy = gl.capabilities.getMaxAnisotropy();
+    }
+  };
 
   // 优化模型
   const optimizeModel = useCallback((scene: THREE.Group) => {
@@ -119,13 +86,9 @@ const ModelLoader: React.FC<ModelLoaderProps> = React.memo(({ fileUrl, onModelLo
         // 降低材质的复杂度
         if (mesh.material) {
           if (Array.isArray(mesh.material)) {
-            mesh.material.forEach(material => {
-              if ((material as MeshStandardMaterial).map) {
-                (material as MeshStandardMaterial).map!.anisotropy = gl.capabilities.getMaxAnisotropy();
-              }
-            });
-          } else if ((mesh.material as MeshStandardMaterial).map) {
-            (mesh.material as MeshStandardMaterial).map!.anisotropy = gl.capabilities.getMaxAnisotropy();
+            mesh.material.forEach(handleMaterial);
+          } else {
+            handleMaterial(mesh.material);
           }
         }
         
@@ -158,7 +121,124 @@ const ModelLoader: React.FC<ModelLoaderProps> = React.memo(({ fileUrl, onModelLo
     if (onModelLoad) {
       onModelLoad(center, size);
     }
-  }, [gltf, onModelLoad, optimizeModel]);
+    
+    // 调用场景加载回调 - 传递场景的 JSON 结构
+    if (onSceneLoad) {
+      // 提取场景结构并转换为可序列化的对象
+      const sceneData = {
+        scene: extractSceneData(gltf.scene),
+        animations: gltf.animations?.map(animation => ({
+          name: animation.name,
+          duration: animation.duration
+        })) || [],
+        asset: gltf.asset,
+        parser: gltf.parser?.json || null
+      };
+      
+      onSceneLoad(sceneData);
+    }
+  }, [gltf, onModelLoad, onSceneLoad, optimizeModel]);
+  
+  // 提取场景数据的辅助函数
+  const extractSceneData = useCallback((object: THREE.Object3D) => {
+    // 创建一个可序列化的场景对象描述
+    const result: any = {
+      name: object.name,
+      type: object.type,
+      uuid: object.uuid,
+      children: []
+    };
+    
+    // 添加特定类型的属性
+    if ((object as THREE.Mesh).isMesh) {
+      const mesh = object as THREE.Mesh;
+      result.geometry = {
+        type: mesh.geometry.type,
+        vertexCount: mesh.geometry.attributes.position?.count || 0,
+        faceCount: mesh.geometry.attributes.position ? 
+          Math.floor(mesh.geometry.attributes.position.count / 3) : 0
+      };
+      
+      // 处理材质
+      if (mesh.material) {
+        if (Array.isArray(mesh.material)) {
+          result.materials = mesh.material.map(mat => ({
+            type: mat.type,
+            name: mat.name,
+            color: (mat as any).color?.getHex(),
+            transparent: (mat as any).transparent,
+            opacity: (mat as any).opacity,
+            uuid: mat.uuid
+          }));
+        } else {
+          result.material = {
+            type: mesh.material.type,
+            name: mesh.material.name,
+            color: (mesh.material as any).color?.getHex(),
+            transparent: (mesh.material as any).transparent,
+            opacity: (mesh.material as any).opacity,
+            uuid: mesh.material.uuid
+          };
+        }
+      }
+    }
+    
+    // 递归处理子对象
+    if (object.children && object.children.length > 0) {
+      object.children.forEach(child => {
+        result.children.push(extractSceneData(child));
+      });
+    }
+    
+    return result;
+  }, []);
+  
+  // 直接加载模型
+  useEffect(() => {
+    if (!gltfLoaderRef.current || !fileUrl) return;
+    
+    // 重置状态
+    setLoadProgress(0);
+    setGltf(null);
+    setError(null);
+    
+    // console.log('开始加载模型:', fileUrl);
+    
+    // 手动加载模型
+    gltfLoaderRef.current.load(
+      fileUrl,
+      // 成功回调
+      (loadedGltf) => {
+        console.log('模型加载成功');
+        setGltf(loadedGltf);
+        setLoadProgress(100);
+      },
+      // 进度回调
+      (event) => {
+        if (event.lengthComputable) {
+          const progress = Math.round((event.loaded / event.total) * 100);
+          console.log(`直接进度: ${progress}%`);
+          setLoadProgress(progress);
+        }
+      },
+      // 错误回调
+      (error) => {
+        console.error('模型加载失败:', error);
+        setError(error instanceof Error ? error.message : '未知错误');
+        if (onSceneLoad) {
+          onSceneLoad({
+            error: error instanceof Error ? error.message : '未知错误',
+            status: 'error'
+          }); 
+        }
+      }
+    );
+    
+    // 清理函数
+    return () => {
+      URL.revokeObjectURL(fileUrl);
+    };
+  }, [fileUrl]);
 
   return (
     <>

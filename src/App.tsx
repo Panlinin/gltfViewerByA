@@ -26,6 +26,7 @@ const App: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [cameraPosition, setCameraPosition] = useState<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
   const [modelCenter, setModelCenter] = useState<THREE.Vector3 | undefined>(undefined);
+  const [sceneInfo, setSceneInfo] = useState<string>("");
   
   // 使用 useMemo 缓存 fileUrl
   const fileUrl = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
@@ -50,7 +51,13 @@ const App: React.FC = () => {
   // 确定要渲染的模型组件
   const modelComponent = useMemo(() => {
     if (file && fileUrl) {
-      return <ModelLoader fileUrl={fileUrl} />;
+      return <ModelLoader 
+        fileUrl={fileUrl} 
+        onSceneLoad={setSceneInfo} 
+        onModelLoad={(center, size) => {
+          setModelCenter(center);
+        }}
+      />;
     }
     return <EmptyModel />;
   }, [file, fileUrl]);
@@ -63,9 +70,9 @@ const App: React.FC = () => {
     <section className="file-upload-section">
       <FileUploader onFileSelect={handleFileSelect} />
       {file && <FileInfoDisplay file={file} />}
-      {showPositionInfo && <PositionInfo modelCenter={modelCenter} cameraPosition={cameraPosition} />}
+      {showPositionInfo && <PositionInfo modelCenter={modelCenter} cameraPosition={cameraPosition} scene={sceneInfo} />}
     </section>
-  ), [file, modelCenter, cameraPosition, handleFileSelect, showPositionInfo]);
+  ), [file, modelCenter, cameraPosition, handleFileSelect, showPositionInfo, sceneInfo]);
 
   const modelViewerSection = useMemo(() => (
     <section className="model-viewer-section">
