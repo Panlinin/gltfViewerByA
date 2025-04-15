@@ -1,10 +1,11 @@
 import React, { useRef, useEffect, useState, useCallback, memo } from 'react';
 import { useThree } from '@react-three/fiber';
-import { OrbitControls, Stage } from '@react-three/drei';
+import { OrbitControls, Stage, Stats } from '@react-three/drei';
 import * as THREE from 'three';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { CameraPositionTracker } from '../PositionInfo';
 import OptimizedCanvas from '../OptimizedCanvas';
+import './styles.css';
 
 // 创建一个Scene设置组件，用于设置场景
 const SceneSetup: React.FC = () => {
@@ -230,21 +231,17 @@ const ModelViewerContent: React.FC<{
       <Stage 
         adjustCamera 
         intensity={0.5} 
-        environment="city" 
+        // environment="city" 
         shadows={false}
         preset="rembrandt"
       >
         {isFragment ? (
-          // 如果是 Fragment，则渲染一个空的占位符
           <EmptyPlaceholder />
         ) : (
-          // 克隆子组件并传递 onModelLoad 属性，同时保留所有原有属性
           React.cloneElement(children, { 
             ...children.props,
             onModelLoad: (center: THREE.Vector3, size: THREE.Vector3) => {
-              // 调用ModelViewer传入的onModelLoad回调
               onModelLoad(center, size);
-              // 如果原组件有自己的onModelLoad回调，也调用它
               if (children.props.onModelLoad) {
                 children.props.onModelLoad(center, size);
               }
@@ -254,6 +251,10 @@ const ModelViewerContent: React.FC<{
       </Stage>
       <OptimizedOrbitControls />
       <HighlightController />
+      <Stats 
+        className="custom-stats"
+        showPanel={0}
+      />
     </>
   );
 });

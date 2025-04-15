@@ -1,0 +1,31 @@
+.custom-stats {
+  position: absolute !important;
+  top: 0 !important;
+  right: 0 !important;
+  z-index: 1000 !important;
+  background: rgba(0, 0, 0, 0.2) !important;
+  border-radius: 4px !important;
+  padding: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  width: fit-content !important;
+}
+
+.custom-stats canvas {
+  display: inline-block !important;
+  margin: 0 4px !important;
+  vertical-align: middle !important;
+}
+
+.custom-stats .stats-panel {
+  display: inline-block !important;
+  margin: 0 4px !important;
+  vertical-align: middle !important;
+  color: white !important;
+  font-family: monospace !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+  text-align: center !important;
+  min-width: 60px !important;
+  white-space: nowrap !important;
+} 
