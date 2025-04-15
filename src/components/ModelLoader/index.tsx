@@ -9,7 +9,7 @@ import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 
 interface ModelLoaderProps {
   fileUrl: string;
-  onModelLoad?: (center: THREE.Vector3, size: THREE.Vector3) => void;
+  onModelLoad?: (scenePosition: THREE.Vector3, size: THREE.Vector3) => void;
   onSceneLoad?: (sceneData: any) => void;
 }
 
@@ -112,14 +112,13 @@ const ModelLoader: React.FC<ModelLoaderProps> = React.memo(({ fileUrl, onModelLo
     
     // 计算模型的边界框，用于回调
     const box = new THREE.Box3().setFromObject(optimizedScene);
-    const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
     
     modelRef.current = optimizedScene;
     
-    // 调用回调函数
+    // 调用回调函数，使用scene的position
     if (onModelLoad) {
-      onModelLoad(center, size);
+      onModelLoad(optimizedScene.position, size);
     }
     
     // 调用场景加载回调 - 传递场景的 JSON 结构

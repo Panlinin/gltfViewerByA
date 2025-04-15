@@ -44,11 +44,15 @@ const OptimizedCanvas: React.FC<OptimizedCanvasProps> = ({
   
   // 默认样式
   const defaultStyle = useMemo<React.CSSProperties>(() => ({
-    height: '100%',
-    minHeight: '500px',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     width: '100%',
-    outline: 'none', // 去除选中时的轮廓
-    touchAction: 'none' // 防止移动端触摸事件冲突
+    height: '100%',
+    outline: 'none',
+    touchAction: 'none'
   }), []);
   
   // 合并样式

@@ -198,7 +198,6 @@ interface ModelLoaderProps {
 interface ModelViewerProps {
   children: React.ReactElement<ModelLoaderProps>;
   onCameraPositionChange?: (position: THREE.Vector3) => void;
-  onModelCenterChange?: (center: THREE.Vector3) => void;
 }
 
 // 优化后的OrbitControls组件，增强实时响应性
@@ -221,7 +220,8 @@ const ModelViewerContent: React.FC<{
   isFragment: boolean;
   onModelLoad: (center: THREE.Vector3, size: THREE.Vector3) => void;
   onCameraPositionChange?: (position: THREE.Vector3) => void;
-}> = memo(({ children, isFragment, onModelLoad, onCameraPositionChange }) => {
+  modelPosition?: THREE.Vector3;
+}> = memo(({ children, isFragment, onModelLoad, onCameraPositionChange, modelPosition }) => {
   return (
     <>
       <color attach="background" args={['#f0f0f0']} />
@@ -261,17 +261,16 @@ const ModelViewerContent: React.FC<{
 
 const ModelViewer: React.FC<ModelViewerProps> = ({ 
   children, 
-  onCameraPositionChange,
-  onModelCenterChange 
+  onCameraPositionChange
 }) => {
   const [modelLoaded, setModelLoaded] = useState(false);
+  const [modelPosition, setModelPosition] = useState<THREE.Vector3 | undefined>();
 
   const handleModelLoad = useCallback((center: THREE.Vector3, size: THREE.Vector3) => {
     setModelLoaded(true);
-    if (onModelCenterChange) {
-      onModelCenterChange(center);
-    }
-  }, [onModelCenterChange]);
+    // 更新模型位置
+    setModelPosition(center);
+  }, []);
 
   const handleCameraPositionChange = useCallback((position: THREE.Vector3) => {
     if (onCameraPositionChange) {
@@ -283,22 +282,20 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
   const isFragment = children.type === React.Fragment;
 
   return (
-    <OptimizedCanvas
-      cameraPosition={[0, 0, 10]}
-      cameraFov={50}
-      style={{ 
-        height: '100%', 
-        minHeight: '500px',
-        width: '100%',
-      }}
-    >
-      <ModelViewerContent
-        children={children}
-        isFragment={isFragment}
-        onModelLoad={handleModelLoad}
-        onCameraPositionChange={handleCameraPositionChange}
-      />
-    </OptimizedCanvas>
+    <div className="model-viewer-container">
+      <OptimizedCanvas
+        cameraPosition={[0, 0, 10]}
+        cameraFov={50}
+      >
+        <ModelViewerContent
+          children={children}
+          isFragment={isFragment}
+          onModelLoad={handleModelLoad}
+          onCameraPositionChange={handleCameraPositionChange}
+          modelPosition={modelPosition}
+        />
+      </OptimizedCanvas>
+    </div>
   );
 };
 

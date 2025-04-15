@@ -6,7 +6,7 @@ import { Tree } from 'antd';
 import type { TreeProps } from 'antd/es/tree';
 
 interface PositionInfoProps {
-  modelCenter?: THREE.Vector3;
+  modelPosition?: THREE.Vector3;
   cameraPosition?: THREE.Vector3;
   scene?: string;
 }
@@ -139,16 +139,19 @@ const ScenePanel: React.FC<{
         selectedKeys={selectedKeys}
         onSelect={handleSelect}
         virtual
+        style={{
+          backgroundColor: '#f0f7ff',
+        }}
       />
     </div>
   );
 });
 
 // 位置信息组件
-const PositionInfo: React.FC<PositionInfoProps> = ({ modelCenter, cameraPosition, scene }) => {
+const PositionInfo: React.FC<PositionInfoProps> = ({ modelPosition, cameraPosition, scene }) => {
   // 使用内部状态来防抖显示
   const [displayCameraPosition, setDisplayCameraPosition] = useState<THREE.Vector3 | undefined>(cameraPosition);
-  const [displayModelCenter, setDisplayModelCenter] = useState<THREE.Vector3 | undefined>(modelCenter);
+  const [displayModelPosition, setDisplayModelPosition] = useState<THREE.Vector3 | undefined>(modelPosition);
   
   // 创建防抖函数
   const debouncedSetDisplayPosition = useRef(
@@ -157,9 +160,9 @@ const PositionInfo: React.FC<PositionInfoProps> = ({ modelCenter, cameraPosition
     }, 150) // 150ms 的防抖时间，调整为更加平滑的体验
   ).current;
   
-  const debouncedSetDisplayCenter = useRef(
-    debounce((newCenter: THREE.Vector3) => {
-      setDisplayModelCenter(new THREE.Vector3().copy(newCenter));
+  const debouncedSetDisplayModelPosition = useRef(
+    debounce((newPosition: THREE.Vector3) => {
+      setDisplayModelPosition(new THREE.Vector3().copy(newPosition));
     }, 150) // 150ms 的防抖时间
   ).current;
   
@@ -171,10 +174,10 @@ const PositionInfo: React.FC<PositionInfoProps> = ({ modelCenter, cameraPosition
   }, [cameraPosition, debouncedSetDisplayPosition]);
   
   useEffect(() => {
-    if (modelCenter) {
-      debouncedSetDisplayCenter(modelCenter);
+    if (modelPosition) {
+      debouncedSetDisplayModelPosition(modelPosition);
     }
-  }, [modelCenter, debouncedSetDisplayCenter]);
+  }, [modelPosition, debouncedSetDisplayModelPosition]);
   
   // 添加CSS类，可以通过CSS来平滑过渡
   const positionInfoStyle = useMemo<React.CSSProperties>(() => ({
@@ -195,12 +198,18 @@ const PositionInfo: React.FC<PositionInfoProps> = ({ modelCenter, cameraPosition
   }), []);
 
   return (
-    <div className="position-info" style={positionInfoStyle}>
-      <h4 style={headerStyle}>位置信息</h4>
+    <>
+      <div style={headerStyle}>模型信息</div>
       <VectorDisplay label="相机位置" vector={displayCameraPosition} />
-      <VectorDisplay label="模型中心" vector={displayModelCenter} />
-      {scene && <ScenePanel scene={scene} />}
-    </div>
+      <VectorDisplay label="模型位置" vector={displayModelPosition} />
+      <br />
+      {scene && (
+        <>
+          <div style={{ marginTop: '10px', ...headerStyle }}>场景数据</div>
+          <ScenePanel scene={scene} />
+        </>
+      )}
+    </>
   );
 };
 
