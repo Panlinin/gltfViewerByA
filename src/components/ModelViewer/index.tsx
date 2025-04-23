@@ -6,23 +6,125 @@ import { CameraPositionTracker } from '../PositionInfo';
 import OptimizedCanvas from '../OptimizedCanvas';
 import './styles.css';
 
+// 灯光配置接口
+interface LightConfig {
+  ambientIntensity: number;
+  ambientColor: string;
+  directIntensity: number;
+  directColor: string;
+}
+
+// 灯光配置面板组件
+const LightConfigPanel: React.FC<{
+  config: LightConfig;
+  onConfigChange: (config: LightConfig) => void;
+}> = ({ config, onConfigChange }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <div className={`light-config-panel ${isExpanded ? 'expanded' : ''}`}>
+      <div className="panel-header" onClick={() => setIsExpanded(!isExpanded)}>
+        <h3>灯光配置</h3>
+        <span className="toggle-icon">{isExpanded ? '▼' : '▶'}</span>
+      </div>
+      {isExpanded && (
+        <div className="panel-content">
+          <div className="config-group">
+            <label>环境光强度</label>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={config.ambientIntensity}
+              onChange={(e) => onConfigChange({
+                ...config,
+                ambientIntensity: parseFloat(e.target.value)
+              })}
+            />
+            <span>{config.ambientIntensity}</span>
+          </div>
+          <div className="config-group">
+            <label>环境光颜色</label>
+            <input
+              type="color"
+              value={config.ambientColor}
+              onChange={(e) => onConfigChange({
+                ...config,
+                ambientColor: e.target.value
+              })}
+            />
+          </div>
+          <div className="config-group">
+            <label>平行光强度</label>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={config.directIntensity}
+              onChange={(e) => onConfigChange({
+                ...config,
+                directIntensity: parseFloat(e.target.value)
+              })}
+            />
+            <span>{config.directIntensity}</span>
+          </div>
+          <div className="config-group">
+            <label>平行光颜色</label>
+            <input
+              type="color"
+              value={config.directColor}
+              onChange={(e) => onConfigChange({
+                ...config,
+                directColor: e.target.value
+              })}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // 创建一个Scene设置组件，用于设置场景
-const SceneSetup: React.FC = () => {
+const SceneSetup: React.FC<{
+  lightConfig?: LightConfig;
+}> = ({ lightConfig = {
+  ambientIntensity: 0.8,
+  ambientColor: '#ffffff',
+  directIntensity: 0.9,
+  directColor: '#ffffff'
+} }) => {
   const { scene } = useThree();
+  const lightsRef = useRef<{
+    directionalLight1?: THREE.DirectionalLight;
+    directionalLight2?: THREE.DirectionalLight;
+    ambientLight?: THREE.AmbientLight;
+  }>({});
   
   useEffect(() => {
-     //   平行光1
-     const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.9);
-     directionalLight1.position.set(0, 57, 33);
-     //   平行光2
-     const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.6);
-     directionalLight2.position.set(-95, 28, -33);
-     // 环境光
-     const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    // 创建灯光
+    lightsRef.current.directionalLight1 = new THREE.DirectionalLight(
+      new THREE.Color(lightConfig.directColor),
+      lightConfig.directIntensity
+    );
+    lightsRef.current.directionalLight1.position.set(0, 57, 33);
+    
+    lightsRef.current.directionalLight2 = new THREE.DirectionalLight(
+      new THREE.Color(lightConfig.directColor),
+      lightConfig.directIntensity * 0.6
+    );
+    lightsRef.current.directionalLight2.position.set(-95, 28, -33);
+    
+    lightsRef.current.ambientLight = new THREE.AmbientLight(
+      new THREE.Color(lightConfig.ambientColor),
+      lightConfig.ambientIntensity
+    );
 
-     scene.add(directionalLight1);
-     scene.add(directionalLight2);
-     scene.add(ambientLight);
+    scene.add(lightsRef.current.directionalLight1);
+    scene.add(lightsRef.current.directionalLight2);
+    scene.add(lightsRef.current.ambientLight);
 
     // 加载环境贴图
     // const loader = new RGBELoader();
@@ -35,11 +137,17 @@ const SceneSetup: React.FC = () => {
 
     return () => {
       // 清理资源
-      scene.remove(directionalLight1);
-      scene.remove(directionalLight2);
-      scene.remove(ambientLight);
+      if (lightsRef.current.directionalLight1) {
+        scene.remove(lightsRef.current.directionalLight1);
+      }
+      if (lightsRef.current.directionalLight2) {
+        scene.remove(lightsRef.current.directionalLight2);
+      }
+      if (lightsRef.current.ambientLight) {
+        scene.remove(lightsRef.current.ambientLight);
+      }
     };
-  }, [scene]);
+  }, [scene, lightConfig]);
 
   return null;
 };
@@ -262,40 +370,33 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
   children, 
   onCameraPositionChange
 }) => {
-  const [modelLoaded, setModelLoaded] = useState(false);
-  const [modelPosition, setModelPosition] = useState<THREE.Vector3 | undefined>();
-
-  const handleModelLoad = useCallback((center: THREE.Vector3, size: THREE.Vector3) => {
-    setModelLoaded(true);
-    // 更新模型位置
-    setModelPosition(center);
-  }, []);
-
-  const handleCameraPositionChange = useCallback((position: THREE.Vector3) => {
-    if (onCameraPositionChange) {
-      onCameraPositionChange(position);
-    }
-  }, [onCameraPositionChange]);
-
-  // 检查子组件是否是 React.Fragment
-  const isFragment = children.type === React.Fragment;
+  const [lightConfig, setLightConfig] = useState<LightConfig>({
+    ambientIntensity: 0.8,
+    ambientColor: '#ffffff',
+    directIntensity: 0.9,
+    directColor: '#ffffff'
+  });
 
   return (
     <div className="model-viewer-container">
-      <OptimizedCanvas
-        cameraPosition={[0, 0, 10]}
-        cameraFov={50}
-      >
+      <LightConfigPanel
+        config={lightConfig}
+        onConfigChange={setLightConfig}
+      />
+      <OptimizedCanvas>
+        <SceneSetup lightConfig={lightConfig} />
         <ModelViewerContent
-          children={children}
-          isFragment={isFragment}
-          onModelLoad={handleModelLoad}
-          onCameraPositionChange={handleCameraPositionChange}
-          modelPosition={modelPosition}
-        />
+          isFragment={false}
+          onModelLoad={() => {}}
+          onCameraPositionChange={onCameraPositionChange}
+        >
+          {children}
+        </ModelViewerContent>
+        <OptimizedOrbitControls />
+        <HighlightController />
       </OptimizedCanvas>
     </div>
   );
 };
 
-export default memo(ModelViewer);
+export default ModelViewer;
