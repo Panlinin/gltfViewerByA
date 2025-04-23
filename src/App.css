@@ -20,50 +20,40 @@ body {
 
 /* 应用容器 */
 .app-container {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  width: 100vw;
 }
 
 /* 头部样式 */
 .app-header {
-  background-color: #2196F3;
-  color: white;
-  padding: 1rem 2rem;
-  text-align: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
+  background-color: #001529;
+  padding: 0 24px;
+  height: 64px;
+  display: flex;
+  align-items: center;
 }
 
 .app-header h1 {
-  font-size: 1.8rem;
-  font-weight: 500;
+  color: white;
   margin: 0;
+  font-size: 20px;
 }
 
 /* 主要内容区域 */
-.app-main {
+.app-content {
   flex: 1;
+  padding: 24px;
   display: flex;
-  padding: 1rem;
-  gap: 1rem;
-  overflow: hidden;
+  gap: 24px;
 }
 
 /* 文件上传区域 */
 .file-upload-section {
-  background-color: white;
-  border-radius: 12px;
-  padding: 1rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  width: 320px;
-  min-width: 320px;
+  width: 300px;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  overflow-y: auto;
-  height: 100%;
+  gap: 16px;
 }
 
 /* 文件上传头部 */
@@ -118,32 +108,22 @@ body {
 }
 
 .file-info {
-  margin-top: 0.5rem;
-  padding: 0.75rem;
-  background-color: #f0f7ff;
+  background-color: #f5f5f5;
+  padding: 16px;
   border-radius: 8px;
-  border-left: 4px solid #2196F3;
-  box-shadow: 0 2px 4px rgba(33, 150, 243, 0.1);
 }
 
 .file-info p {
-  margin-bottom: 0.25rem;
-  font-size: 0.9rem;
-  color: #333;
-  line-height: 1.4;
-  word-break: break-all;
-  white-space: normal;
-  overflow-wrap: break-word;
+  margin: 8px 0;
+  color: #666;
 }
 
 /* 模型信息区域 */
 .model-info-section {
-  margin-top: 0.75rem;
-  padding: 0.75rem;
-  background-color: #f0f7ff;
+  background-color: #f5f5f5;
+  padding: 16px;
   border-radius: 8px;
-  border-left: 4px solid #2196F3;
-  box-shadow: 0 2px 4px rgba(33, 150, 243, 0.1);
+  flex: 1;
 }
 
 .model-info-section h3 {
@@ -180,21 +160,15 @@ body {
 /* 模型查看器区域 */
 .model-viewer-section {
   flex: 1;
-  background-color: white;
+  min-height: 600px;
+  background-color: #f0f0f0;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  position: relative;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
 }
 
 .model-container {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-  min-height: 0;
+  width: 100%;
+  height: 100%;
 }
 
 /* 信息面板 */
@@ -224,26 +198,22 @@ body {
 
 /* 页脚样式 */
 .app-footer {
-  background-color: #333;
-  color: #ccc;
   text-align: center;
-  padding: 0.5rem;
-  font-size: 0.9rem;
+  padding: 16px;
+  background-color: #f0f0f0;
+  color: #666;
 }
 
 /* 响应式布局 */
 @media (max-width: 768px) {
-  .app-main {
+  .app-content {
     flex-direction: column;
   }
-  
+
   .file-upload-section {
     width: 100%;
-    min-width: unset;
-    height: auto;
-    max-height: 50vh;
   }
-  
+
   .model-viewer-section {
     min-height: 400px;
   }

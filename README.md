@@ -1,46 +1,75 @@
-# Getting Started with Create React App
+# GLTF 模型查看器
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+这是一个基于 React 和 Three.js 构建的 GLTF 模型查看器，支持查看和交互式操作 3D 模型。
 
-## Available Scripts
+## 功能特点
 
-In the project directory, you can run:
+- 支持上传和预览 GLTF/GLB 格式的 3D 模型
+- 实时显示模型和相机位置信息
+- 流畅的 3D 模型渲染和交互体验
+- 响应式设计，适配不同屏幕尺寸
 
-### `npm start`
+## 技术栈
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- React 18
+- TypeScript
+- Three.js
+- Ant Design
+- Vite
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## 项目结构
 
-### `npm test`
+```
+src/
+├── components/          # 组件目录
+│   ├── ModelLoader/    # 模型加载器组件
+│   ├── ModelViewer/    # 模型查看器组件
+│   ├── OptimizedCanvas/# 优化后的画布组件
+│   ├── PositionInfo/   # 位置信息显示组件
+│   └── FileUploader/   # 文件上传组件
+├── utils/              # 工具函数
+├── types/              # 类型定义
+└── styles/             # 样式文件
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 安装和运行
 
-### `npm run build`
+1. 安装依赖：
+```bash
+yarn install
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+2. 启动开发服务器：
+```bash
+yarn start
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+3. 构建生产版本：
+```bash
+yarn build
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 使用说明
 
-### `npm run eject`
+1. 点击"选择文件"按钮上传 GLTF/GLB 格式的 3D 模型文件
+2. 模型加载完成后，可以使用鼠标进行以下操作：
+   - 左键拖动：旋转模型
+   - 右键拖动：平移模型
+   - 滚轮：缩放模型
+3. 右侧面板会实时显示模型和相机的位置信息
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+## 开发计划
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- [ ] 添加模型动画控制
+- [ ] 支持更多 3D 模型格式
+- [ ] 添加模型材质编辑功能
+- [ ] 实现模型导出功能
+- [ ] 添加性能优化选项
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## 贡献指南
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+欢迎提交 Issue 和 Pull Request 来帮助改进这个项目。
 
-## Learn More
+## 许可证
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+MIT License
