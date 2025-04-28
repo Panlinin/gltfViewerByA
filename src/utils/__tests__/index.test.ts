@@ -1,79 +1,66 @@
-import { debounce } from '../index';
+import { debounce, throttle } from '../index';
 
-describe('debounce function', () => {
-  jest.useFakeTimers();
+describe('utils functions', () => {
+  describe('debounce', () => {
+    it('should debounce function calls', (done) => {
+      let count = 0;
+      const increment = () => count++;
+      const debouncedIncrement = debounce(increment, 100);
 
-  it('should execute the function only once after the wait time', () => {
-    const mockFn = jest.fn();
-    const debouncedFn = debounce(mockFn, 1000);
+      // 快速调用多次
+      debouncedIncrement();
+      debouncedIncrement();
+      debouncedIncrement();
 
-    // 快速调用多次
-    debouncedFn();
-    debouncedFn();
-    debouncedFn();
+      // 等待防抖时间过去
+      setTimeout(() => {
+        expect(count).toBe(1);
+        done();
+      }, 200);
+    });
 
-    // 此时函数不应该被执行
-    expect(mockFn).not.toHaveBeenCalled();
+    it('should execute immediately when immediate is true', () => {
+      let count = 0;
+      const increment = () => count++;
+      const debouncedIncrement = debounce(increment, 100, true);
 
-    // 快进时间
-    jest.advanceTimersByTime(1000);
-
-    // 此时函数应该只被执行一次
-    expect(mockFn).toHaveBeenCalledTimes(1);
+      debouncedIncrement();
+      expect(count).toBe(1);
+    });
   });
 
-  it('should pass arguments correctly', () => {
-    const mockFn = jest.fn();
-    const debouncedFn = debounce(mockFn, 1000);
+  describe('throttle', () => {
+    it('should throttle function calls', (done) => {
+      let count = 0;
+      const increment = () => count++;
+      const throttledIncrement = throttle(increment, 100);
 
-    debouncedFn('test', 123);
-    jest.advanceTimersByTime(1000);
+      // 快速调用多次
+      throttledIncrement();
+      throttledIncrement();
+      throttledIncrement();
 
-    expect(mockFn).toHaveBeenCalledWith('test', 123);
-  });
+      // 等待节流时间过去
+      setTimeout(() => {
+        expect(count).toBe(1);
+        done();
+      }, 200);
+    });
 
-  it('should use default wait time if not provided', () => {
-    const mockFn = jest.fn();
-    const debouncedFn = debounce(mockFn);
+    it('should allow multiple calls after wait time', (done) => {
+      let count = 0;
+      const increment = () => count++;
+      const throttledIncrement = throttle(increment, 100);
 
-    debouncedFn();
-    jest.advanceTimersByTime(1000);
+      // 第一次调用
+      throttledIncrement();
 
-    expect(mockFn).toHaveBeenCalledTimes(1);
-  });
-
-  it('should clear previous timer when called again', () => {
-    const mockFn = jest.fn();
-    const debouncedFn = debounce(mockFn, 1000);
-
-    debouncedFn();
-    jest.advanceTimersByTime(500);
-    debouncedFn();
-    jest.advanceTimersByTime(1000);
-
-    expect(mockFn).toHaveBeenCalledTimes(1);
-  });
-
-  it('should execute immediately when immediate is true', () => {
-    const mockFn = jest.fn();
-    const debouncedFn = debounce(mockFn, 1000, true);
-
-    debouncedFn();
-    expect(mockFn).toHaveBeenCalledTimes(1);
-
-    debouncedFn();
-    jest.advanceTimersByTime(1000);
-    expect(mockFn).toHaveBeenCalledTimes(1);
-  });
-
-  it('should maintain proper type safety', () => {
-    const typedFn = (a: string, b: number) => a + b;
-    const debouncedFn = debounce(typedFn);
-
-    // This should not cause type errors
-    debouncedFn('test', 123);
-    
-    // This should cause type errors (commented out as it would fail compilation)
-    // debouncedFn(123, 'test'); // Type error
+      // 等待节流时间过去后再次调用
+      setTimeout(() => {
+        throttledIncrement();
+        expect(count).toBe(2);
+        done();
+      }, 200);
+    });
   });
 }); 

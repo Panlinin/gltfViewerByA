@@ -33,4 +33,18 @@ const debounce = <T extends (...args: any[]) => any>(
   };
 };
 
-export { debounce };
+
+const throttle = (fn: Function, waitTime = 1000) => {
+  // 上一次执行时间
+  let lastTime = 0;
+
+  return function (...args: any[]) {
+    const now = Date.now();
+
+    if(now - lastTime >= waitTime) {
+      fn(...args);
+      lastTime = now;
+    }
+  }}
+
+export { debounce, throttle };
